@@ -115,3 +115,23 @@ def tarik(transaksi: TransaksiRequest):
         }
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
+
+@app.get("/saldo/{no_rekening}")
+def get_saldo(no_rekening: str):
+    session = Session(bind=engine, expire_on_commit=False)
+    account = session.query(Account).filter(Account.no_rekening == no_rekening).first()
+
+    if account is None:
+        return_msg = {
+            "remark": "failed - No Rekening tidak ditemukan"
+        }
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
+
+    return_msg = {
+        "remark": "success",
+        "data": {
+            "saldo": account.saldo
+        }
+    }
+    session.close()
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
