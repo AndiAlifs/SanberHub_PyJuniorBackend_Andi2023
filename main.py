@@ -3,16 +3,26 @@ from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse
 
 # import database yang merupakan model dan akses database
-from database import Base, engine, Session, Account, Transaksi
+from database.model import Base, engine, Session, Account, Transaksi
 
 # import schemas yang merupakan request dan response
-from schemas import AccountRequest, TransaksiRequest
+from database.schemas import AccountRequest, TransaksiRequest
 
 # import package yang digunakan dalam logic
 from datetime import datetime
 import random
 
 app = FastAPI() # inisialisasi app
+
+# function untuk mendapatkan session
+def get_session():
+    session = Session(bind=engine, expire_on_commit=False)
+    return session
+    
+# function untuk menutup session
+def close_session(session):
+    session.commit()
+    session.close()
 
 # endpoint untuk daftar akun
 @app.post("/daftar")
@@ -30,18 +40,15 @@ def create_account(account: AccountRequest):
             }
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
 
-    session = Session(bind=engine, expire_on_commit=False)
-
+    session = get_session()
     new_account = Account(
         nik=account.nik,
         nama=account.nama,
         no_hp=account.no_hp,
         no_rekening=str(random.randint(100000, 999999)),
     )
-
     session.add(new_account)
-    session.commit()
-    session.close()
+    close_session(session)
 
     return_msg = {
         "remark": "success",
@@ -54,7 +61,7 @@ def create_account(account: AccountRequest):
 # endpoint untuk tabung - menambah saldo
 @app.post("/tabung")
 def tabung(transaksi: TransaksiRequest):
-    session = Session(bind=engine, expire_on_commit=False)
+    session = get_session()
     account = session.query(Account).filter(Account.no_rekening == transaksi.no_rekening).first()
 
     if account is None:
@@ -74,9 +81,7 @@ def tabung(transaksi: TransaksiRequest):
         kode_transaksi="c"
     )
     session.add(new_transaksi)
-
-    session.commit()
-    session.close()
+    close_session(session)
 
     return_msg = {
         "remark": "success",
@@ -89,7 +94,7 @@ def tabung(transaksi: TransaksiRequest):
 # endpoint untuk tarik - mengurangi saldo
 @app.post("/tarik")
 def tarik(transaksi: TransaksiRequest):
-    session = Session(bind=engine, expire_on_commit=False)
+    session = get_session()
     account = session.query(Account).filter(Account.no_rekening == transaksi.no_rekening).first()
 
     if account is None:
@@ -115,9 +120,7 @@ def tarik(transaksi: TransaksiRequest):
     )
 
     session.add(new_transaksi)
-    session.commit()
-
-    session.close()
+    close_session(session)
 
     return_msg = {
         "remark": "success",
@@ -130,7 +133,7 @@ def tarik(transaksi: TransaksiRequest):
 # endpoint untuk cek saldo
 @app.get("/saldo/{no_rekening}")
 def get_saldo(no_rekening: str):
-    session = Session(bind=engine, expire_on_commit=False)
+    session = get_session()
     account = session.query(Account).filter(Account.no_rekening == no_rekening).first()
 
     if account is None:
@@ -145,13 +148,14 @@ def get_saldo(no_rekening: str):
             "saldo": account.saldo
         }
     }
-    session.close()
+
+    close_session(session)
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
 
 # endpoint untuk mengecek mutasi
 @app.get("/mutasi/{no_rekening}")
 def get_mutasi(no_rekening: str):
-    session = Session(bind=engine, expire_on_commit=False)
+    session = get_session()
     account = session.query(Account).filter(Account.no_rekening == no_rekening).first()
 
     if account is None:
@@ -174,5 +178,5 @@ def get_mutasi(no_rekening: str):
             "kode_transaksi": transaksi.kode_transaksi
         })
 
-    session.close()
+    close_session(session)
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)

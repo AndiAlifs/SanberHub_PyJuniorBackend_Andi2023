@@ -1,14 +1,17 @@
 # Mini API for CRUD Bank Account Bank
 ## Built by : @AndiAlifs
 
-![API Documentation](APIDocumentation.png)
+![API Documentation](asset/APIDocumentation.png)
 
 # Project Structure
 ```bash
-├── main.py             # Main File, consist of FastAPI App
-├── database.py         # Database Connection and Model
-├── schemas.py          # Pydantic Schema
-├── docker-compose.yml  # Docker Compose File for Postgres and PgAdmin
+├── main.py                 # Main File, consist of FastAPI App and Logic
+├── requirements.txt        # Requirements Package
+├── README.md               # This File
+├── Database/               # Database Folder
+├── ├── database.py         # Database Connection and Model
+├── ├── schemas.py          # Pydantic Schema
+├── ├── docker-compose.yml  # Docker Compose File for Postgres and PgAdmin
 ```
 
 # Requirements
@@ -41,7 +44,9 @@ docker pull dpage/pgadmin4
 # How to Run
 1. Run docker-compose
 ```bash
+cd Database
 docker-compose up -d
+cd ..
 ```
 2. Create Database
     - Open PgAdmin on ```http://localhost:5050```
