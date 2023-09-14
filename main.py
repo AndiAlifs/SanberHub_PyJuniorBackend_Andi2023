@@ -2,6 +2,7 @@ from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse
 from database import Base, engine, Session, Account, Transaksi
 import random
+from datetime import datetime
 from schemas import AccountRequest, TransaksiRequest
 
 app = FastAPI()
@@ -133,5 +134,33 @@ def get_saldo(no_rekening: str):
             "saldo": account.saldo
         }
     }
+    session.close()
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
+
+@app.get("/mutasi/{no_rekening}")
+def get_mutasi(no_rekening: str):
+    session = Session(bind=engine, expire_on_commit=False)
+    account = session.query(Account).filter(Account.no_rekening == no_rekening).first()
+
+    if account is None:
+        return_msg = {
+            "remark": "failed - No Rekening tidak ditemukan"
+        }
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
+
+    all_transaksi = session.query(Transaksi).filter(Transaksi.no_rekening == no_rekening).all()
+    return_msg = {
+        "remark": "success",
+        "data": {
+            "mutasi": []
+        }
+    }
+    for transaksi in all_transaksi:
+        return_msg["data"]["mutasi"].append({
+            "waktu": datetime.strftime(transaksi.waktu, '%Y-%m-%d %H:%M:%S'),
+            "nominal": transaksi.nominal,
+            "kode_transaksi": transaksi.kode_transaksi
+        })
+
     session.close()
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
