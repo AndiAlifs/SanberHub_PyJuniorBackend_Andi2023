@@ -1,12 +1,20 @@
+# import fastapi yang merupakan backend app
 from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse
+
+# import database yang merupakan model dan akses database
 from database import Base, engine, Session, Account, Transaksi
-import random
-from datetime import datetime
+
+# import schemas yang merupakan request dan response
 from schemas import AccountRequest, TransaksiRequest
 
-app = FastAPI()
+# import package yang digunakan dalam logic
+from datetime import datetime
+import random
 
+app = FastAPI() # inisialisasi app
+
+# endpoint untuk daftar akun
 @app.post("/daftar")
 def create_account(account: AccountRequest):
     all_account = Session().query(Account).all()
@@ -43,6 +51,7 @@ def create_account(account: AccountRequest):
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
 
+# endpoint untuk tabung - menambah saldo
 @app.post("/tabung")
 def tabung(transaksi: TransaksiRequest):
     session = Session(bind=engine, expire_on_commit=False)
@@ -77,6 +86,7 @@ def tabung(transaksi: TransaksiRequest):
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
 
+# endpoint untuk tarik - mengurangi saldo
 @app.post("/tarik")
 def tarik(transaksi: TransaksiRequest):
     session = Session(bind=engine, expire_on_commit=False)
@@ -117,6 +127,7 @@ def tarik(transaksi: TransaksiRequest):
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
 
+# endpoint untuk cek saldo
 @app.get("/saldo/{no_rekening}")
 def get_saldo(no_rekening: str):
     session = Session(bind=engine, expire_on_commit=False)
@@ -137,6 +148,7 @@ def get_saldo(no_rekening: str):
     session.close()
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
 
+# endpoint untuk mengecek mutasi
 @app.get("/mutasi/{no_rekening}")
 def get_mutasi(no_rekening: str):
     session = Session(bind=engine, expire_on_commit=False)
