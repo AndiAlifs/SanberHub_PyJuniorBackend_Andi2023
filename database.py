@@ -24,13 +24,13 @@ class Account(Base):
     nik = Column(String, primary_key=True)
     nama = Column(String)
     no_hp = Column(String)
-    no_rek = Column(String, nullable=True)
+    no_rekening = Column(String, nullable=True)
     saldo = Column(Integer, default=0)
 
 class Transaksi(Base):
     __tablename__ = "transaksi"
     id = Column(Integer, primary_key=True)
-    no_rek = Column(String)
+    no_rekening = Column(String)
     nominal = Column(Integer)
     waktu = Column(DateTime)
     kode_transaksi = Column(String)

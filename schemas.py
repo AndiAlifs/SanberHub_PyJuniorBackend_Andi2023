@@ -9,7 +9,7 @@ class AccountRequest(BaseModel):
         from_attributes = True
 
 class TransaksiRequest(BaseModel):
-    no_rek: str
+    no_rekening: str
     nominal: int
 
     class Config:
