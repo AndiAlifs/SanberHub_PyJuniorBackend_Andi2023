@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
+from fastapi.responses import JSONResponse
 from database import Base, engine, Session, Account, Transaksi
 import random
 from schemas import AccountRequest, TransaksiRequest
@@ -14,7 +15,7 @@ def check_account(no_rek):
 @app.post("/tabung")
 def tabung(transaksi: TransaksiRequest):
     account = check_account(transaksi.no_rek)
-    
+
     if account is None:
         return_msg = {
             "remark": "failed",
@@ -22,7 +23,7 @@ def tabung(transaksi: TransaksiRequest):
                 "reason": "No Rekening tidak ditemukan"
             }
         }
-        return json_response(status_code=400, content=return_msg)
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
 
     session = Session(bind=engine, expire_on_commit=False)
     account.saldo += transaksi.nominal
@@ -35,7 +36,7 @@ def tabung(transaksi: TransaksiRequest):
             "saldo": account.saldo
         }
     }
-    return json_response(status_code=200, content=return_msg)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
 
 
 @app.post("/daftar")
@@ -49,7 +50,7 @@ def create_account(account: AccountRequest):
                     "reason": "NIK sudah terdaftar"
                 }
             }
-            return json_response(status_code=400, content=return_msg)
+            return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
         elif acc.no_hp == account.no_hp:
             return_msg = {
                 "remark": "failed",
@@ -57,7 +58,7 @@ def create_account(account: AccountRequest):
                     "reason": "No HP sudah terdaftar"
                 }
             }
-            return json_response(status_code=400, content=return_msg)
+            return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
 
     session = Session(bind=engine, expire_on_commit=False)
 
@@ -78,4 +79,4 @@ def create_account(account: AccountRequest):
             "no_rek": new_account.no_rek,
         }
     }
-    return json_response(status_code=200, content=return_msg)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
