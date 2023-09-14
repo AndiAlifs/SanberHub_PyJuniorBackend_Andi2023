@@ -14,12 +14,12 @@ def create_account(account: AccountRequest):
             return_msg = {
                 "remark": "failed - NIK sudah terdaftar"
             }
-            return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
         elif acc.no_hp == account.no_hp:
             return_msg = {
                 "remark": "failed - No HP sudah terdaftar"
             }
-            return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
 
     session = Session(bind=engine, expire_on_commit=False)
 
@@ -51,7 +51,7 @@ def tabung(transaksi: TransaksiRequest):
         return_msg = {
             "remark": "failed - No Rekening tidak ditemukan"
         }
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
 
     
     account.saldo += transaksi.nominal
@@ -85,13 +85,13 @@ def tarik(transaksi: TransaksiRequest):
         return_msg = {
             "remark": "failed - No Rekening tidak ditemukan"
         }
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
 
     if account.saldo < transaksi.nominal:
         return_msg = {
             "remark": "failed - Saldo tidak cukup"
         }
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
 
     account.saldo -= transaksi.nominal
     session.commit()
