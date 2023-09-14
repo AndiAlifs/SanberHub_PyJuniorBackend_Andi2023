@@ -6,57 +6,18 @@ from schemas import AccountRequest, TransaksiRequest
 
 app = FastAPI()
 
-def check_account(no_rek):
-    session = Session(bind=engine, expire_on_commit=False)
-    account = session.query(Account).filter_by(no_rek=no_rek).first()
-    session.close()
-    return account
-
-@app.post("/tabung")
-def tabung(transaksi: TransaksiRequest):
-    account = check_account(transaksi.no_rek)
-
-    if account is None:
-        return_msg = {
-            "remark": "failed",
-            "data": {
-                "reason": "No Rekening tidak ditemukan"
-            }
-        }
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
-
-    session = Session(bind=engine, expire_on_commit=False)
-    account.saldo += transaksi.nominal
-    session.commit()
-    session.close()
-
-    return_msg = {
-        "remark": "success",
-        "data": {
-            "saldo": account.saldo
-        }
-    }
-    return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
-
-
 @app.post("/daftar")
 def create_account(account: AccountRequest):
     all_account = Session().query(Account).all()
     for acc in all_account:
         if acc.nik == account.nik:
             return_msg = {
-                "remark": "failed",
-                "data": {
-                    "reason": "NIK sudah terdaftar"
-                }
+                "remark": "failed - NIK sudah terdaftar"
             }
             return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
         elif acc.no_hp == account.no_hp:
             return_msg = {
-                "remark": "failed",
-                "data": {
-                    "reason": "No HP sudah terdaftar"
-                }
+                "remark": "failed - No HP sudah terdaftar"
             }
             return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
 
@@ -66,7 +27,7 @@ def create_account(account: AccountRequest):
         nik=account.nik,
         nama=account.nama,
         no_hp=account.no_hp,
-        no_rek=str(random.randint(100000, 999999)),
+        no_rekening=str(random.randint(100000, 999999)),
     )
 
     session.add(new_account)
@@ -76,7 +37,41 @@ def create_account(account: AccountRequest):
     return_msg = {
         "remark": "success",
         "data": {
-            "no_rek": new_account.no_rek,
+            "no_rekening": new_account.no_rekening,
+        }
+    }
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
+
+@app.post("/tabung")
+def tabung(transaksi: TransaksiRequest):
+    session = Session(bind=engine, expire_on_commit=False)
+    account = session.query(Account).filter(Account.no_rekening == transaksi.no_rekening).first()
+
+    if account is None:
+        return_msg = {
+            "remark": "failed - No Rekening tidak ditemukan"
+        }
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
+
+    
+    account.saldo += transaksi.nominal
+    session.commit()
+
+    new_transaksi = Transaksi(
+        no_rekening=transaksi.no_rekening,
+        nominal=transaksi.nominal,
+        waktu="now",
+        kode_transaksi="c"
+    )
+    session.add(new_transaksi)
+
+    session.commit()
+    session.close()
+
+    return_msg = {
+        "remark": "success",
+        "data": {
+            "saldo": account.saldo
         }
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
