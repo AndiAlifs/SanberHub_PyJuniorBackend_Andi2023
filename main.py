@@ -75,3 +75,43 @@ def tabung(transaksi: TransaksiRequest):
         }
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
+
+@app.post("/tarik")
+def tarik(transaksi: TransaksiRequest):
+    session = Session(bind=engine, expire_on_commit=False)
+    account = session.query(Account).filter(Account.no_rekening == transaksi.no_rekening).first()
+
+    if account is None:
+        return_msg = {
+            "remark": "failed - No Rekening tidak ditemukan"
+        }
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
+
+    if account.saldo < transaksi.nominal:
+        return_msg = {
+            "remark": "failed - Saldo tidak cukup"
+        }
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
+
+    account.saldo -= transaksi.nominal
+    session.commit()
+
+    new_transaksi = Transaksi(
+        no_rekening=transaksi.no_rekening,
+        nominal=transaksi.nominal,
+        waktu="now",
+        kode_transaksi="d"
+    )
+
+    session.add(new_transaksi)
+    session.commit()
+
+    session.close()
+
+    return_msg = {
+        "remark": "success",
+        "data": {
+            "saldo": account.saldo
+        }
+    }
+    return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
