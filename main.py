@@ -180,3 +180,11 @@ def get_mutasi(no_rekening: str):
 
     close_session(session)
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
+
+def delete_test_data():
+    session = get_session()
+    all_test_account = session.query(Account).filter(Account.nama.like('%test_case%')).all()
+    for test_data in all_test_account:
+        session.query(Transaksi).filter(Transaksi.no_rekening == test_data.no_rekening).delete()
+        session.delete(test_data)
+    close_session(session)
