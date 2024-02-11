@@ -68,7 +68,7 @@ def tabung(transaksi: TransaksiRequest):
         return_msg = {
             "remark": "failed - No Rekening tidak ditemukan"
         }
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
     crud.tambah_saldo(session, transaksi.no_rekening, transaksi.nominal)
 
     new_transaksi = Transaksi(
@@ -97,7 +97,7 @@ def tarik(transaksi: TransaksiRequest):
         return_msg = {
             "remark": "failed - No Rekening tidak ditemukan"
         }
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
     if account.saldo < transaksi.nominal:
         return_msg = {
             "remark": "failed - Saldo tidak cukup"
@@ -131,7 +131,7 @@ def get_saldo(no_rekening: str):
         return_msg = {
             "remark": "failed - No Rekening tidak ditemukan"
         }
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
     close_session(session)
 
     return_msg = {
@@ -152,7 +152,7 @@ def get_mutasi(no_rekening: str):
         return_msg = {
             "remark": "failed - No Rekening tidak ditemukan"
         }
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=return_msg)
 
     all_transaksi = session.query(Transaksi).filter(Transaksi.no_rekening == no_rekening).all()
     return_msg = {

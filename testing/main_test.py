@@ -36,6 +36,7 @@ def test_create_rekening(db_session):
     )
     
     response_json = response.json()
+    assert response.status_code == 200
     assert response_json["remark"] == "success"
 
 def test_create_rekening_failed_nik_sama(db_session):
@@ -61,6 +62,7 @@ def test_create_rekening_failed_nik_sama(db_session):
     )
     
     response_json = response.json()
+    assert response.status_code == 400
     assert response_json["remark"] == "failed - NIK sudah terdaftar"
 
 def test_create_rekening_failed_no_hp_sama(db_session):
@@ -86,6 +88,7 @@ def test_create_rekening_failed_no_hp_sama(db_session):
     )
     
     response_json = response.json()
+    assert response.status_code == 400
     assert response_json["remark"] == "failed - No HP sudah terdaftar"
 
 def test_tabung(db_session, nomor_rekening):
@@ -119,6 +122,7 @@ def test_tarik(db_session, nomor_rekening):
     )
     
     response_json = response.json()
+    assert response.status_code == 200
     assert response_json["remark"] == "success"
     assert response_json["data"]["saldo"] == 50000
 
@@ -140,6 +144,7 @@ def test_tarik_failed_saldo_kurang(db_session, nomor_rekening):
     )
     
     response_json = response.json()
+    assert response.status_code == 400
     assert response_json["remark"] == "failed - Saldo tidak cukup"
 
 def test_tarik_failed_no_rekening_tidak_ditemukan(db_session):
@@ -154,7 +159,7 @@ def test_tarik_failed_no_rekening_tidak_ditemukan(db_session):
     )
     
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert response_json["remark"] == "failed - No Rekening tidak ditemukan"
 
 def test_saldo(db_session, nomor_rekening):
@@ -181,7 +186,7 @@ def test_mutasi_failed_no_rekening_tidak_ditemukan(db_session):
     )
     
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert response_json["remark"] == "failed - No Rekening tidak ditemukan"
 
 def test_mutasi(db_session, nomor_rekening):
@@ -204,5 +209,6 @@ def test_mutasi(db_session, nomor_rekening):
     )
     
     response_json = response.json()
+    assert response.status_code == 200
     assert response_json["remark"] == "success"
     assert len(response_json["data"]["mutasi"]) == 2
