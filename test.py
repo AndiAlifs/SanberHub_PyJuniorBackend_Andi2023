@@ -6,7 +6,7 @@ if __name__ == "__main__":
             "testing/ ",
             "-v",
             "--no-header",
-            "--tb=short",
+            "--tb=long",
             "-W ignore",
         ]
     )

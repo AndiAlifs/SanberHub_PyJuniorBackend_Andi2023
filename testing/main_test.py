@@ -101,7 +101,6 @@ def test_tabung(db_session, nomor_rekening):
     assert response_json["remark"] == "success"
     assert response_json["data"]["saldo"] == 100000
     
-
 def test_tarik(db_session, nomor_rekening):
     response = client.post(
         "/tabung",
@@ -155,6 +154,34 @@ def test_tarik_failed_no_rekening_tidak_ditemukan(db_session):
     )
     
     response_json = response.json()
+    assert response.status_code == 400
+    assert response_json["remark"] == "failed - No Rekening tidak ditemukan"
+
+def test_saldo(db_session, nomor_rekening):
+    response = client.post(
+        "/tabung",
+        json={
+            "no_rekening": nomor_rekening,
+            "nominal": 23000,
+        },
+    )
+    response = client.get(
+        "/saldo/" + nomor_rekening
+    )
+    
+    response_json = response.json()
+    assert response.status_code == 200
+    assert response_json["remark"] == "success"
+    assert response_json["data"]["saldo"] == 23000
+
+def test_mutasi_failed_no_rekening_tidak_ditemukan(db_session):
+    nomor_rekening = "123456"
+    response = client.get(
+        "/mutasi/" + nomor_rekening
+    )
+    
+    response_json = response.json()
+    assert response.status_code == 400
     assert response_json["remark"] == "failed - No Rekening tidak ditemukan"
 
 def test_mutasi(db_session, nomor_rekening):
@@ -179,13 +206,3 @@ def test_mutasi(db_session, nomor_rekening):
     response_json = response.json()
     assert response_json["remark"] == "success"
     assert len(response_json["data"]["mutasi"]) == 2
-
-if __name__ == "__main__":
-    pytest.main(
-        args=[
-            "-v",
-            "--no-header",
-            "--tb=short",
-            "-W ignore",
-        ]
-    )

@@ -11,8 +11,7 @@ from database.schemas import AccountRequest, TransaksiRequest
 # import package yang digunakan dalam logic
 from datetime import datetime
 import random
-
-app = FastAPI() # inisialisasi app
+import database.crud as crud
 
 # function untuk mendapatkan session
 def get_session():
@@ -24,10 +23,13 @@ def close_session(session):
     session.commit()
     session.close()
 
+app = FastAPI() # inisialisasi app
+
 # endpoint untuk daftar akun
 @app.post("/daftar")
 def create_account(account: AccountRequest):
-    all_account = Session().query(Account).all()
+    session = get_session() # mendapatkan session
+    all_account = crud.get_all_account(session)
     for acc in all_account:
         if acc.nik == account.nik:
             return_msg = {
@@ -40,14 +42,13 @@ def create_account(account: AccountRequest):
             }
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
 
-    session = get_session()
     new_account = Account(
         nik=account.nik,
         nama=account.nama,
         no_hp=account.no_hp,
         no_rekening=str(random.randint(100000, 999999)),
     )
-    session.add(new_account)
+    crud.create_account(session, new_account)
     close_session(session)
 
     return_msg = {
@@ -62,17 +63,13 @@ def create_account(account: AccountRequest):
 @app.post("/tabung")
 def tabung(transaksi: TransaksiRequest):
     session = get_session()
-    account = session.query(Account).filter(Account.no_rekening == transaksi.no_rekening).first()
-
+    account = crud.account_by_no_rekening(session, transaksi.no_rekening)
     if account is None:
         return_msg = {
             "remark": "failed - No Rekening tidak ditemukan"
         }
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
-
-    
-    account.saldo += transaksi.nominal
-    session.commit()
+    crud.tambah_saldo(session, transaksi.no_rekening, transaksi.nominal)
 
     new_transaksi = Transaksi(
         no_rekening=transaksi.no_rekening,
@@ -80,7 +77,7 @@ def tabung(transaksi: TransaksiRequest):
         waktu="now",
         kode_transaksi="c"
     )
-    session.add(new_transaksi)
+    crud.create_transaksi(session, new_transaksi)
     close_session(session)
 
     return_msg = {
@@ -95,22 +92,18 @@ def tabung(transaksi: TransaksiRequest):
 @app.post("/tarik")
 def tarik(transaksi: TransaksiRequest):
     session = get_session()
-    account = session.query(Account).filter(Account.no_rekening == transaksi.no_rekening).first()
-
+    account = crud.account_by_no_rekening(session, transaksi.no_rekening)
     if account is None:
         return_msg = {
             "remark": "failed - No Rekening tidak ditemukan"
         }
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
-
     if account.saldo < transaksi.nominal:
         return_msg = {
             "remark": "failed - Saldo tidak cukup"
         }
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
-
-    account.saldo -= transaksi.nominal
-    session.commit()
+    crud.tarik_saldo(session, transaksi.no_rekening, transaksi.nominal)
 
     new_transaksi = Transaksi(
         no_rekening=transaksi.no_rekening,
@@ -118,8 +111,7 @@ def tarik(transaksi: TransaksiRequest):
         waktu="now",
         kode_transaksi="d"
     )
-
-    session.add(new_transaksi)
+    crud.create_transaksi(session, new_transaksi)
     close_session(session)
 
     return_msg = {
@@ -134,13 +126,13 @@ def tarik(transaksi: TransaksiRequest):
 @app.get("/saldo/{no_rekening}")
 def get_saldo(no_rekening: str):
     session = get_session()
-    account = session.query(Account).filter(Account.no_rekening == no_rekening).first()
-
+    account = crud.account_by_no_rekening(session, no_rekening)
     if account is None:
         return_msg = {
             "remark": "failed - No Rekening tidak ditemukan"
         }
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=return_msg)
+    close_session(session)
 
     return_msg = {
         "remark": "success",
@@ -148,8 +140,6 @@ def get_saldo(no_rekening: str):
             "saldo": account.saldo
         }
     }
-
-    close_session(session)
     return JSONResponse(status_code=status.HTTP_200_OK, content=return_msg)
 
 # endpoint untuk mengecek mutasi
