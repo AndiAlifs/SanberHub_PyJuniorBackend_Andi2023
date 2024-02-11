@@ -37,3 +37,16 @@ def test_account_by_no_rekening_failed_not_found():
     no_rekening = str(random.randint(100000, 999999)),
     account = crud.account_by_no_rekening(session, no_rekening)
     assert account == None  
+
+def test_account_by_name():
+    nama = "test_case"
+    new_account = Account(
+        nik=str(random.randint(1000000, 9999999)),
+        nama=nama,
+        no_hp=str(random.randint(1000000, 9999999)),
+        no_rekening=str(random.randint(100000, 999999)),
+    )
+    crud.create_account(session, new_account)
+    accounts = crud.get_accounts_by_name(session, nama)
+    assert len(accounts) >= 1
+    

@@ -173,8 +173,10 @@ def get_mutasi(no_rekening: str):
 
 def delete_test_data():
     session = get_session()
-    all_test_account = session.query(Account).filter(Account.nama.like('%test_case%')).all()
+    all_test_account = crud.get_accounts_by_name(session, "test")
     for test_data in all_test_account:
-        session.query(Transaksi).filter(Transaksi.no_rekening == test_data.no_rekening).delete()
-        session.delete(test_data)
+        related_transaksi = crud.get_all_transaksi_by_no_rekening(session, test_data.no_rekening)
+        for transaksi in related_transaksi:
+            crud.delete_transaksi(session, transaksi)
+        crud.delete_account(session, test_data)
     close_session(session)

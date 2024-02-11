@@ -21,12 +21,16 @@ def account_by_no_rekening(session, no_rekening):
     return account
 
 def get_accounts_by_name(session, nama):
-    accounts = session.query(Account).filter(Account.nama.like('%{nama}%')).all()
+    accounts = session.query(Account).filter(Account.nama.like(f'%{nama}%')).all()
     return accounts
 
 def create_account(session, NewAccount: Account):
     session.add(NewAccount)
     return NewAccount
+
+def delete_account(session, delete_account: Account):
+    session.delete(delete_account)
+    return delete_account
 
 def tambah_saldo(session, no_rekening, jumlah):
     account = session.query(Account).filter(Account.no_rekening == no_rekening).first()
@@ -41,3 +45,11 @@ def tarik_saldo(session, no_rekening, jumlah):
 def create_transaksi(session, new_transaksi: Transaksi):
     session.add(new_transaksi)
     return new_transaksi
+
+def get_all_transaksi_by_no_rekening(session, no_rekening):
+    all_transaksi = session.query(Transaksi).filter(Transaksi.no_rekening == no_rekening).all()
+    return all_transaksi
+
+def delete_transaksi(session, delete_transaksi: Transaksi):
+    session.delete(delete_transaksi)
+    return delete_transaksi

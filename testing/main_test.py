@@ -212,3 +212,4 @@ def test_mutasi(db_session, nomor_rekening):
     assert response.status_code == 200
     assert response_json["remark"] == "success"
     assert len(response_json["data"]["mutasi"]) == 2
+
